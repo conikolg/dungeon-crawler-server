@@ -51,6 +51,7 @@ func _on_peer_connected(peer_id: int) -> void:
 	
 
 func _on_peer_disconnected(peer_id: int) -> void:
+	self.player_manager.remove_player(peer_id)
 	print("Peer with id=%s disconnected." % peer_id)
 
 

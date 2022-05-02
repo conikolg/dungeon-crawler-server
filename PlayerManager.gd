@@ -24,3 +24,11 @@ func serialize_players() -> Dictionary:
 	for child in self.get_children():
 		player_states[child.name] = child.serialize()
 	return player_states
+
+
+func remove_player(player_id: int) -> void:
+	for child in self.get_children():
+		if child.name == str(player_id):
+			child.queue_free()
+			self.remove_child(child)
+			return
