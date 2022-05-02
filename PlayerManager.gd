@@ -13,7 +13,7 @@ func update_player_with_state(player_id: int, state: Dictionary) -> void:
 			return
 	
 	# Must be a new player
-	var new_player: Player = Player.new()
+	var new_player: Player = self.player_scene.instance()
 	new_player.name = str(player_id)
 	new_player.update_with_state(state)
 	self.add_child(new_player)

@@ -23,7 +23,7 @@ func spawn_enemy() -> void:
 	var enemy_id = self.enemy_unused_id
 	self.enemy_unused_id += 1
 	
-	var enemy_node = Enemy.new()
+	var enemy_node = self.enemy_scene.instance()
 	enemy_node.name = str(enemy_id)
 	enemy_node.global_position = location
 	enemy_node.rotation = direction

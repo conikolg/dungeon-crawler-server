@@ -107,6 +107,6 @@ func serialize() -> Dictionary:
 	}
 
 
-func update_with_state(state: Dictionary) -> void:
-	self.global_position = state["pos"]
-	self.rotation = state["rot"]
+func update_with_state(new_state: Dictionary) -> void:
+	self.global_position = new_state["pos"]
+	self.rotation = new_state["rot"]
