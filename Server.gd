@@ -13,6 +13,8 @@ var enemy_spawn_interval: int = 2
 var enemy_unused_id: int = 1
 var enemy_spawn_locations: Array
 
+onready var player_manager  = $PlayerManager
+
 
 func _init() -> void:
 	# Thank you https://github.com/LudiDorici/gd-custom-multiplayer
@@ -31,7 +33,6 @@ func _ready() -> void:
 	
 	# Initialize world state
 	self.world_state = {
-		"players": {},	# Create dictionary to track all players
 		"enemies": {}	# Create dictionary to track all enemies
 	}
 	
@@ -81,17 +82,12 @@ func _on_peer_disconnected(peer_id: int) -> void:
 
 func _on_enemy_spawn_timer_timeout() -> void:
 	var enemies: Dictionary = self.world_state["enemies"]
-	var players: Dictionary = self.world_state["players"]
+
 	if enemies.size() >= self.enemy_max_count:
 		return
 	
 	var location: Vector2 = self.enemy_spawn_locations[randi() % self.enemy_spawn_locations.size()]
-	var target_player_location: Vector2
-	if players.size() > 0:
-		target_player_location = players[players.keys()[randi() % players.size()]]["pos"]
-	else:
-		target_player_location = Vector2.ZERO
-	var direction: float = target_player_location.angle_to_point(location)
+	var direction: float = Vector2.ZERO.angle_to_point(location)
 	var enemy_id = self.enemy_unused_id
 	self.enemy_unused_id += 1
 	var enemy_name = "Enemy%d" % enemy_id
@@ -136,6 +132,7 @@ func startServer() -> void:
 
 func server_update() -> void:
 	# Deep copy the world state before changing it
+	self.world_state["players"] = self.player_manager.serialize_players()
 	var state: Dictionary = self.strip_timestamps(self.world_state.duplicate(true))
 	# Add the server's timestamp to the whole payload
 	state["time"] = OS.get_system_time_msecs()
@@ -166,15 +163,8 @@ func strip_timestamps(state: Dictionary) -> Dictionary:
 remote func server_receive_player_pos(state: Dictionary) -> void:
 	# Get who sent this update
 	var client_id: int = self.multiplayer.get_rpc_sender_id()
-	# Is it a brand new update?
-	if !(str(client_id) in self.world_state['players'].keys()):
-		self.world_state['players'][str(client_id)] = state
-	# Otherwise, is it newer?
-	elif state["time"] > self.world_state['players'][str(client_id)]["time"]:
-		self.world_state['players'][str(client_id)] = state
-	# Not new update - ignore it
-	else:
-		pass
+	# Pass it to the player manager
+	self.player_manager.update_player_with_state(client_id, state)
 
 
 remote func server_receive_enemy_hit(enemy_name: String) -> void:
