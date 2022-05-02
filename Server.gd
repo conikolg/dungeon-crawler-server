@@ -6,14 +6,8 @@ var port: int = 42069
 var allow_remote_players: bool = true
 var peer: NetworkedMultiplayerENet
 
-var world_state: Dictionary
-
-var enemy_max_count: int = 10
-var enemy_spawn_interval: int = 2
-var enemy_unused_id: int = 1
-var enemy_spawn_locations: Array
-
 onready var player_manager  = $PlayerManager
+onready var enemy_manager  = $EnemyManager
 
 
 func _init() -> void:
@@ -30,23 +24,6 @@ func _init() -> void:
 func _ready() -> void:
 	# Set random seed
 	randomize()
-	
-	# Initialize world state
-	self.world_state = {
-		"enemies": {}	# Create dictionary to track all enemies
-	}
-	
-	# Set locations of enemy spawn points
-	for x in range(2, 7):
-		for y in range(2, 5):
-			self.enemy_spawn_locations.append(Vector2(100 * x, 100 * y))
-	
-	# Create a timer to spawn enemies
-	var timer: Timer = Timer.new()
-	timer.name = "EnemySpawnTimer"
-	timer.wait_time = self.enemy_spawn_interval
-	timer.connect("timeout", self, "_on_enemy_spawn_timer_timeout")
-	self.add_child(timer)
 	
 	# Actually start the server
 	self.startServer()
@@ -75,29 +52,6 @@ func _on_peer_connected(peer_id: int) -> void:
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	print("Peer with id=%s disconnected." % peer_id)
-	
-	# Delete this peer from the world's players state
-	self.world_state["players"].erase(str(peer_id))
-
-
-func _on_enemy_spawn_timer_timeout() -> void:
-	var enemies: Dictionary = self.world_state["enemies"]
-
-	if enemies.size() >= self.enemy_max_count:
-		return
-	
-	var location: Vector2 = self.enemy_spawn_locations[randi() % self.enemy_spawn_locations.size()]
-	var direction: float = Vector2.ZERO.angle_to_point(location)
-	var enemy_id = self.enemy_unused_id
-	self.enemy_unused_id += 1
-	var enemy_name = "Enemy%d" % enemy_id
-	
-	enemies[enemy_name] = {
-		"name": enemy_name,
-		"id": enemy_id,
-		"pos": location,
-		"rot": direction
-	}
 
 
 ##########################################
@@ -125,30 +79,17 @@ func startServer() -> void:
 		self.get_tree().quit()
 	if self.peer.get_connection_status() != NetworkedMultiplayerPeer.CONNECTION_CONNECTED:
 		self.get_tree().quit()
-	
-	# Start enemy spawning
-	self.get_node("EnemySpawnTimer").start()
 
 
 func server_update() -> void:
-	# Deep copy the world state before changing it
-	self.world_state["players"] = self.player_manager.serialize_players()
-	var state: Dictionary = self.strip_timestamps(self.world_state.duplicate(true))
-	# Add the server's timestamp to the whole payload
-	state["time"] = OS.get_system_time_msecs()
-	# Send all players the locations of all players
-	rpc_unreliable_id(0, "client_receive_world_state", state)
-
-
-func strip_timestamps(state: Dictionary) -> Dictionary:
-	# Recursively remove any "time" attributes from subcomponents
-	if "time" in state.keys():
-		state.erase("time")
-	for key in state:
-		if state[key] is Dictionary:
-			self.strip_timestamps(state[key])
-	
-	return state
+	# Construct current state of the world
+	var world: Dictionary = {}
+	world["players"] = self.player_manager.serialize_players()
+	world["enemies"] = self.enemy_manager.serialize_enemies()
+	# Add the server's timestamp to the payload
+	world["time"] = OS.get_system_time_msecs()
+	# Send all players all information about the world
+	rpc_unreliable_id(0, "client_receive_world_state", world)
 
 
 ##################################################
@@ -168,8 +109,7 @@ remote func server_receive_player_pos(state: Dictionary) -> void:
 
 
 remote func server_receive_enemy_hit(enemy_name: String) -> void:
-	if self.world_state["enemies"].has(enemy_name):
-		self.world_state["enemies"].erase(enemy_name)
+	self.enemy_manager.hit_enemy(enemy_name)
 
 
 remote func request_data():
