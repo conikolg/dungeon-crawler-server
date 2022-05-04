@@ -44,10 +44,11 @@ func serialize_enemies() -> Dictionary:
 
 
 func hit_enemy(enemy_name: String) -> void:
-	for child in self.enemy_container.get_children():
-		if child.name == enemy_name:
-			child.die()
-			self.enemy_container.remove_child(child)
+	# Deal 50 damage to whoever was hit
+	var child: Enemy = self.enemy_container.get_node_or_null(enemy_name)
+	if child == null:
+		return
+	child.health_pool.current_health -= 50
 
 
 func assign_targets() -> void:

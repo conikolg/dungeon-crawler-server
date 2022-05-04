@@ -37,6 +37,16 @@ func set_health(new_health: int) -> void:
 		emit_signal("health_reached_zero")
 
 
+func serialize() -> Dictionary:
+	return {
+		"health": self.current_health
+	}
+
+
+func deserialize(state: Dictionary) -> void:
+	self.current_health = state["health"]
+
+
 func _on_RegenTimer_timeout() -> void:
 	if self.current_health >= self.health_regeneration_cutoff:
 		return

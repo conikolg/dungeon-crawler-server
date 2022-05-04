@@ -29,6 +29,7 @@ func _ready() -> void:
 	self.state = EnemyState.IDLING
 	self.attack_range.connect("body_entered", self, "_on_attack_range_body_entered")
 	self.attack_range.connect("body_exited", self, "_on_attack_range_body_exited")
+	self.health_pool.connect("health_reached_zero", self, "die")
 	
 
 func die() -> void:
@@ -85,7 +86,6 @@ func _physics_process_attacking(_delta: float) -> void:
 		self.right_punch = !self.right_punch
 		
 		# Attack the target
-		print("Attacking a target!")
 		self.target.health_pool.current_health -= self.attack_damage
 		
 		# Set attack speed, start the timer

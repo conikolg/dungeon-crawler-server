@@ -15,7 +15,8 @@ func _ready():
 func serialize() -> Dictionary:
 	return {
 		"pos": self.global_position,
-		"rot": self.rotation
+		"rot": self.rotation,
+		"hp": self.health_pool.serialize()
 	}
 
 
