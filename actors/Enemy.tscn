@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://actors/RemoteEnemyCollisionShape.tres" type="Shape2D" id=1]
 [ext_resource path="res://actors/Enemy.gd" type="Script" id=2]
 [ext_resource path="res://actors/RemoteEnemyAttackCollisionShape.tres" type="Shape2D" id=3]
+[ext_resource path="res://actors/HealthPool.tscn" type="PackedScene" id=4]
 
 [node name="Enemy" type="KinematicBody2D"]
 script = ExtResource( 2 )
@@ -19,3 +20,5 @@ shape = ExtResource( 1 )
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackRange"]
 position = Vector2( 15, 0 )
 shape = ExtResource( 3 )
+
+[node name="HealthPool" parent="." instance=ExtResource( 4 )]

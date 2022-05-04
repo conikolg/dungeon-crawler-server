@@ -6,12 +6,18 @@ var enemy_scene: PackedScene = preload("res://actors/Enemy.tscn")
 var enemy_max_count: int = 10
 var enemy_unused_id: int = 0
 
+var player_manager: Node = null
+
 onready var enemy_spawn_timer = $EnemySpawnTimer
 onready var enemy_container = $Enemies
 
 
 func _ready():
 	self.enemy_spawn_timer.connect("timeout", self, "spawn_enemy")
+
+
+func _physics_process(_delta: float) -> void:
+	self.assign_targets()
 
 
 func spawn_enemy() -> void:
@@ -41,4 +47,19 @@ func hit_enemy(enemy_name: String) -> void:
 	for child in self.enemy_container.get_children():
 		if child.name == enemy_name:
 			child.die()
-			self.remove_child(child)
+			self.enemy_container.remove_child(child)
+
+
+func assign_targets() -> void:
+	if self.player_manager == null:
+		return
+	
+	if self.player_manager.get_child_count() == 0:
+		return
+	
+	# Assign a random player as the target to all enemies with no target
+	var players: Array = self.player_manager.get_children()
+	for enemy_child in self.enemy_container.get_children():
+		if enemy_child.target == null:
+			var player_target = players[randi() % players.size()]
+			enemy_child.target = player_target

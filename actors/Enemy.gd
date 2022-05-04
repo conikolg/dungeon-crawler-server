@@ -13,9 +13,11 @@ export (int) var movement_speed = 75
 export (int) var attack_damage = 5
 export (float) var attack_speed = 2
 onready var attack_timer = $AttackTimer
+onready var attack_range = $AttackRange
+onready var health_pool: HealthPool = $HealthPool
+
 var target: Player = null
 var state: int = -1 setget set_state
-
 
 # Attack state instance variables
 var base_atk_dir: Vector2 = Vector2.ZERO
@@ -25,6 +27,8 @@ var right_punch: bool = true
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	self.state = EnemyState.IDLING
+	self.attack_range.connect("body_entered", self, "_on_attack_range_body_entered")
+	self.attack_range.connect("body_exited", self, "_on_attack_range_body_exited")
 	
 
 func die() -> void:
@@ -32,6 +36,11 @@ func die() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Did my target get deleted? i.e. from a player disconnecting
+	if self.target != null and !is_instance_valid(self.target):
+		self.target = null
+		self.state = EnemyState.IDLING
+
 	match self.state:
 		EnemyState.IDLING:
 			self._physics_process_idling(delta)
@@ -84,7 +93,7 @@ func _physics_process_attacking(_delta: float) -> void:
 		self.attack_timer.start()
 	
 
-func _on_Area2D_body_entered(body: Node) -> void:
+func _on_attack_range_body_entered(body: Node) -> void:
 	# Ignore body if it isn't the target
 	if body != self.target:
 		return
@@ -92,7 +101,7 @@ func _on_Area2D_body_entered(body: Node) -> void:
 	self.state = EnemyState.ATTACKING
 
 
-func _on_Area2D_body_exited(body: Node) -> void:
+func _on_attack_range_body_exited(body: Node) -> void:
 	# Ignore body if it isn't the target
 	if body != self.target:
 		return

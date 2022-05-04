@@ -4,6 +4,7 @@ class_name Player
 
 # Instance variables
 var last_update_time: int = 0
+onready var health_pool: HealthPool = $HealthPool
 
 
 # Called when the node enters the scene tree for the first time.

@@ -25,6 +25,9 @@ func _ready() -> void:
 	# Set random seed
 	randomize()
 	
+	# Pass references
+	self.enemy_manager.player_manager = self.player_manager
+	
 	# Actually start the server
 	self.startServer()
 
