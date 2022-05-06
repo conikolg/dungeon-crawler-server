@@ -116,6 +116,12 @@ remote func server_receive_enemy_hit(enemy_name: String) -> void:
 	self.enemy_manager.hit_enemy(enemy_name)
 
 
+remote func server_latency_ping(client_time: int) -> void:
+	var client_id: int = self.multiplayer.get_rpc_sender_id()
+	var server_time: int = OS.get_system_time_msecs()
+	rpc_id(client_id, "client_latency_pong", client_time, server_time)
+
+
 remote func request_data():
 	print("Got rpc from client")
 	var client_id: int = self.multiplayer.get_rpc_sender_id()
