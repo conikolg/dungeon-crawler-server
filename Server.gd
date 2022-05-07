@@ -8,6 +8,7 @@ var peer: NetworkedMultiplayerENet
 
 onready var player_manager  = $PlayerManager
 onready var enemy_manager  = $EnemyManager
+onready var projectile_manager  = $ProjectileManager
 
 
 func _init() -> void:
@@ -90,6 +91,7 @@ func server_update() -> void:
 	var world: Dictionary = {}
 	world["players"] = self.player_manager.serialize_players()
 	world["enemies"] = self.enemy_manager.serialize_enemies()
+	world["projectiles"] = self.projectile_manager.serialize_projectiles()
 	# Add the server's timestamp to the payload
 	world["time"] = OS.get_system_time_msecs()
 	# Send all players all information about the world
@@ -120,6 +122,11 @@ remote func server_latency_ping(client_time: int) -> void:
 	var client_id: int = self.multiplayer.get_rpc_sender_id()
 	var server_time: int = OS.get_system_time_msecs()
 	rpc_id(client_id, "client_latency_pong", client_time, server_time)
+
+
+remote func server_receive_fireball_attack(position: Vector2, rotation: float) -> void:
+	var client_id: int = self.multiplayer.get_rpc_sender_id()
+	self.projectile_manager.spawn_fireball(client_id, position, rotation)
 
 
 remote func request_data():

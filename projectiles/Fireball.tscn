@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://projectiles/Fireball.gd" type="Script" id=7]
+[ext_resource path="res://projectiles/FireballCollisionShape.tres" type="Shape2D" id=8]
+
+[node name="Fireball" type="Area2D"]
+script = ExtResource( 7 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 17, -2 )
+shape = ExtResource( 8 )
+
+[node name="DespawnTimer" type="Timer" parent="."]
+wait_time = 10.0
+autostart = true
